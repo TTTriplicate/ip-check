@@ -2,10 +2,10 @@
 #include "IPCheck.h"
 
 void IPCheck::dataIntake(std::string input) {
-    //takes a string, splits on a ' ' to separate ip from mask
+    //uses regex to parse out the octets of the ip address and network mask.
+    //throws if there are too few or too many octets
     std::regex pattern("[0-9]+");
     std::smatch octet;
-
     std::string tosearch = input;
     int ip[4];
     int mask[4];
@@ -32,9 +32,7 @@ void IPCheck::dataIntake(std::string input) {
 }
 
 void IPCheck::setIP(int* ip) {
-    //breaks the ip address into octets and stores them
-    //throws an exception if there are too few, too many, or
-    //a number that does not fit in 8 bits unsigned
+    //stores the ip address
     for (int i = 0; i < 4; i++) {
         ipAddress[i] = ip[i];
     }
@@ -42,6 +40,7 @@ void IPCheck::setIP(int* ip) {
 }
 
 void IPCheck::validateIP() {
+    //Throws if there is a number that does not fit in 8 bits unsigned
     for(int i : ipAddress)
     if (i > 255 || i < 0) {
         throw std::runtime_error("IP Address invalid: octet out of range.");
@@ -49,20 +48,16 @@ void IPCheck::validateIP() {
 }
 
 void IPCheck::setMask(int* mask) {
-    //breaks the network mask into octets and stores them
-    //throws an exception if there are too few, too many,
-    //a number that does not fit in 8 bits unsigned,
-    //or a pattern other than all 1s followed by all 0s
+    //stores the network mask
     for (int i = 0; i < 4; i++) {
-        if (mask[i] > 255 || mask[i] < 0) {
-            throw std::runtime_error("Network mask invalid: octet out of range.");
-        }
         networkMask[i] = mask[i];
     }
     validateMask();
 }
 
 void IPCheck::validateMask() {
+    //Throws if there is a number that does not fit in 8 bits unsigned,
+    //or a pattern other than all 1s followed by all 0s
     for (int i : networkMask)
         if (i > 255 || i < 0) {
             throw std::runtime_error("IP Address invalid: octet out of range.");
@@ -88,7 +83,6 @@ void IPCheck::validateMask() {
     }
 
 }
-
 
 int* IPCheck::getIP() {
     return ipAddress;
