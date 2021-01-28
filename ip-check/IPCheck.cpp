@@ -56,7 +56,7 @@ void IPCheck::setMask(std::string mask) {
         mask.erase(0, pos + 1);
     }
     if (count == 3) {
-        ipAddress[3] = stoi(mask);
+        networkMask[3] = stoi(mask);
     }
     else {
         throw std::runtime_error("Invalid network mask: " + fullMask);

@@ -25,7 +25,7 @@ int main() {
         }
 
         int* ip = check.getIP();
-        std::cout << "IP : ";
+        std::cout << "IP: ";
         for (int i = 0; i < 4; i++) {
             std::cout << ip[i];
             if (i < 3) {
@@ -42,6 +42,7 @@ int main() {
                 std::cout << ".";
             }
         }
+
         std::cout << std::endl;
 
         std::cout << "Network mask class: " << check.maskClass() << std::endl;
