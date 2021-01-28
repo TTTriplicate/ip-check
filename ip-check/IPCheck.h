@@ -8,15 +8,18 @@ and network masks
 #include <string>
 #include <stdexcept>
 #include <iostream>
+#include <regex>
 
 class IPCheck {
 private:
     int ipAddress[4];
-    void setIP(std::string address);
+    void setIP(int * ip);
+    void validateIP();
 
     int networkMask[4];
-    void setMask(std::string mask);
+    void setMask(int * mask);
     int* getMask();
+    void validateMask();
 
     int networkAddress[4];
     void setNetworkAddress();

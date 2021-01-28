@@ -23,6 +23,10 @@ int main() {
             std::cerr << e.what() << std::endl << std::endl << std::endl;
             continue;
         }
+        catch (std::invalid_argument& e) {
+            std::cerr << e.what() << std::endl << std::endl << std::endl;
+            continue;
+        }
 
         int* ip = check.getIP();
         std::cout << "IP: ";

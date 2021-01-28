@@ -3,15 +3,27 @@
 
 void IPCheck::dataIntake(std::string input) {
     //takes a string, splits on a ' ' to separate ip from mask
-    std::string ip, mask;
-    ip = input.substr(0, input.find(" "));
-    mask = input.substr(input.find(" ")+1);
-    if (mask == "" || mask == " ") {
-        try {
-            mask = input.substr(1, input.find(" "));
+    std::regex pattern("[0-9]+");
+    std::smatch octet;
+
+    std::string tosearch = input;
+    int ip[4];
+    int mask[4];
+
+    int count = 0;
+    while (std::regex_search(tosearch, octet, pattern)) {
+        if (count < 4) {
+            ip[count] = stoi(octet.str());
+            count++;
+            tosearch = octet.suffix();
         }
-        catch (std::exception e) {
-            throw std::runtime_error("bad data entered.");
+        else if (count > 8) {
+            throw std::invalid_argument("Malformed mask or ip address.");
+        }
+        else {
+            mask[count - 4] = stoi(octet.str());
+            count++;
+            tosearch = octet.suffix();
         }
     }
     setIP(ip);
@@ -19,48 +31,42 @@ void IPCheck::dataIntake(std::string input) {
     setNetworkAddress();
 }
 
-void IPCheck::setIP(std::string ip) {
+void IPCheck::setIP(int* ip) {
     //breaks the ip address into octets and stores them
     //throws an exception if there are too few, too many, or
     //a number that does not fit in 8 bits unsigned
-    int count = 0;
-    size_t pos = 0;
-    std::string fullIP = ip;
-    while ((pos = ip.find(".")) != std::string::npos) {
-        ipAddress[count] = stoi(ip.substr(0, pos));
-        if (ipAddress[count] > 255 || ipAddress[count] < 0) {
-            throw std::runtime_error("IP Address invalid: " + fullIP);
-        }
-        count++;
-        ip.erase(0, pos + 1);
+    for (int i = 0; i < 4; i++) {
+        ipAddress[i] = ip[i];
     }
-    if (count == 3) {
-        ipAddress[3] = stoi(ip);
-    }
-    else {
-        throw std::runtime_error("IP Address invalid: " + fullIP);
+    validateIP();
+}
+
+void IPCheck::validateIP() {
+    for(int i : ipAddress)
+    if (i > 255 || i < 0) {
+        throw std::runtime_error("IP Address invalid: octet out of range.");
     }
 }
 
-void IPCheck::setMask(std::string mask) {
+void IPCheck::setMask(int* mask) {
     //breaks the network mask into octets and stores them
     //throws an exception if there are too few, too many,
     //a number that does not fit in 8 bits unsigned,
     //or a pattern other than all 1s followed by all 0s
-    size_t pos = 0;
-    int count = 0;
-    std::string fullMask = mask;
-    while ((pos = mask.find(".")) != std::string::npos) {
-        networkMask[count] = stoi(mask.substr(0, pos));
-        count++;
-        mask.erase(0, pos + 1);
+    for (int i = 0; i < 4; i++) {
+        if (mask[i] > 255 || mask[i] < 0) {
+            throw std::runtime_error("Network mask invalid: octet out of range.");
+        }
+        networkMask[i] = mask[i];
     }
-    if (count == 3) {
-        networkMask[3] = stoi(mask);
-    }
-    else {
-        throw std::runtime_error("Invalid network mask: " + fullMask);
-    }
+    validateMask();
+}
+
+void IPCheck::validateMask() {
+    for (int i : networkMask)
+        if (i > 255 || i < 0) {
+            throw std::runtime_error("IP Address invalid: octet out of range.");
+        }
     for (int i = 0; i < 4; i++) {
         int submask = 0;
         for (int j = 7; j >= 0; j--) {
@@ -69,18 +75,20 @@ void IPCheck::setMask(std::string mask) {
                 break;
             }
             else if (submask > networkMask[i]) {
-                throw std::runtime_error("Invalid network mask: " + fullMask);
+                throw std::runtime_error("Invalid network mask.");
             }
         }
         if (submask != 255) {
-            for (int k = i+1; k < 4; k++) {
+            for (int k = i + 1; k < 4; k++) {
                 if (networkMask[k] != 0) {
                     throw std::runtime_error("Invalid network mask.");
                 }
             }
         }
     }
+
 }
+
 
 int* IPCheck::getIP() {
     return ipAddress;
