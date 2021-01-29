@@ -4,26 +4,28 @@
 void IPCheck::dataIntake(std::string input) {
     //uses regex to parse out the octets of the ip address and network mask.
     //throws if there are too few or too many octets
-    std::regex pattern("[0-9]+");
+    std::regex pattern("\\d+");
     std::smatch octet;
     std::string tosearch = input;
     int ip[4];
     int mask[4];
 
     int count = 0;
-    while (std::regex_search(tosearch, octet, pattern)) {
-        if (count < 4) {
+    auto matches = std::sregex_iterator(input.begin(), input.end(), pattern);
+    auto end = std::sregex_iterator();
+    for (std::sregex_iterator i = matches; i != end; i++) {
+        if (count < 4) {//first four octets are ip address
+            octet = *i;
             ip[count] = stoi(octet.str());
             count++;
-            tosearch = octet.suffix();
         }
-        else if (count > 8) {
-            throw std::invalid_argument("Malformed mask or ip address.");
+        else if (count > 7) {//too many octets caught here
+            throw std::invalid_argument(input + ": \nMalformed mask or ip address.");
         }
-        else {
+        else {//next 4 are network mask
+            octet = *i;
             mask[count - 4] = stoi(octet.str());
             count++;
-            tosearch = octet.suffix();
         }
     }
     setIP(ip);
@@ -41,6 +43,7 @@ void IPCheck::setIP(int* ip) {
 
 void IPCheck::validateIP() {
     //Throws if there is a number that does not fit in 8 bits unsigned
+    //also catches too few octets; default is INT_MIN, far less than 0
     for(int i : ipAddress)
     if (i > 255 || i < 0) {
         throw std::runtime_error("IP Address invalid: octet out of range.");
@@ -60,28 +63,30 @@ void IPCheck::validateMask() {
     //or a pattern other than all 1s followed by all 0s
     for (int i : networkMask)
         if (i > 255 || i < 0) {
-            throw std::runtime_error("IP Address invalid: octet out of range.");
+            throw std::runtime_error("Network mask invalid: octet out of range.");
         }
     for (int i = 0; i < 4; i++) {
         int submask = 0;
         for (int j = 7; j >= 0; j--) {
+            //valid submasks are 1s  then 0s, left to right
+            //with 8 bits per octet, it will be the sum of i^2 from i=7 to i=0
             submask += static_cast<int>(std::pow(2, j));
             if (submask == networkMask[i] || networkMask[i] == 0) {
                 break;
             }
-            else if (submask > networkMask[i]) {
+            else if (submask > networkMask[i]) {//zeros too early in sequence
                 throw std::runtime_error("Invalid network mask.");
             }
         }
         if (submask != 255) {
             for (int k = i + 1; k < 4; k++) {
+                //any non-zero octet following a octet < 255 is invalid
                 if (networkMask[k] != 0) {
                     throw std::runtime_error("Invalid network mask.");
                 }
             }
         }
     }
-
 }
 
 int* IPCheck::getIP() {
@@ -93,7 +98,7 @@ int* IPCheck::getMask() {
 }
 
 void IPCheck::setNetworkAddress() {
-    //Applies network mask to ip address, stores resulting network address
+    //Applies network mask to ip address using bitwise and; stores resulting network address
     for (int i = 0; i < 4; i++) {
         networkAddress[i] = (ipAddress[i] & networkMask[i]);
     }
@@ -109,6 +114,7 @@ std::string IPCheck::maskClass() {
         if (networkMask[1] == 255) {
             if (networkMask[2] == 255) {
                 if (networkMask[3] == 0) {
+                    //255.255.255.0
                     return "Class C";
                 }
                 else {
@@ -116,6 +122,7 @@ std::string IPCheck::maskClass() {
                 }
             }
             else if (networkMask[2] == 0 && networkMask[3] == 0) {
+                //255.255.0.0
                 return "Class B";
             }
             else {
@@ -123,6 +130,7 @@ std::string IPCheck::maskClass() {
             }
         }
         else if (networkMask[1] == 0 && networkMask[2] == 0 && networkMask[3] == 0) {
+            //255.0.0.0
             return "Class A";
         }
     }
@@ -132,6 +140,7 @@ std::string IPCheck::maskClass() {
 bool IPCheck::isPublic() {
     //checks rules outlined in RFC 1918; returns true if public, false if not
     if (ipAddress[0] == 10) {
+        //10.x.x.x
         return false;
     }
     else if (ipAddress[0] == 172) {
@@ -139,10 +148,12 @@ bool IPCheck::isPublic() {
             return true;
         }
         else {
+            //172.16-31.x.x
             return false;
         }
     }
     else if (ipAddress[0] == 192 && ipAddress[1] == 168) {
+        //192.168.x.x
         return false;
     }
     else {

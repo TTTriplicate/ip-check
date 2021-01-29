@@ -46,7 +46,6 @@ int main() {
                 std::cout << ".";
             }
         }
-
         std::cout << std::endl;
 
         std::cout << "Network mask class: " << check.maskClass() << std::endl;
