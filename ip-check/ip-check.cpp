@@ -2,9 +2,9 @@
 ip-check.cpp
 written by Chris Sousa
 a short program that reads formatted text input
-in the form of "(ip address) (network mask)"
-and validates input, and outputs analysis.
-Written 1/20/21
+in the form of "(ip address) (network mask)",
+validates input, and outputs analysis.
+Written 1/20-31/21
 */
 #include <iostream>
 #include <fstream>
@@ -38,6 +38,18 @@ int main() {
         }
         std::cout << std::endl;
 
+        int* mask = check.getMask();
+        std::cout << "Network mask: ";
+        for (int i = 0; i < 4; i++) {
+            std::cout << mask[i];
+            if (i < 3) {
+                std::cout << ".";
+            }
+        }
+        std::cout << std::endl;
+
+        std::cout << "Network mask class: " << check.maskClass() << std::endl;
+
         int* netAddr = check.getNetworkAddress();
         std::cout << "Network address: ";
         for (int i = 0; i < 4; i++) {
@@ -47,8 +59,6 @@ int main() {
             }
         }
         std::cout << std::endl;
-
-        std::cout << "Network mask class: " << check.maskClass() << std::endl;
 
         std::cout << "This network is " << (check.isPublic() ? "Public" : "Private") << std::endl;
 

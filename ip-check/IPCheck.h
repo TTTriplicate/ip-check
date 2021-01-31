@@ -18,7 +18,6 @@ private:
 
     int networkMask[4];
     void setMask(int * mask);
-    int* getMask();
     void validateMask();
 
     int networkAddress[4];
@@ -28,6 +27,7 @@ public:
     IPCheck() {};
     void dataIntake(std::string input);
     int* getIP();
+    int* getMask();
     int* getNetworkAddress();
     std::string maskClass();
     bool isPublic();
