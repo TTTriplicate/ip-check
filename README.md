@@ -6,6 +6,9 @@ Chris Sousa
 CS-331
 
 ### How to run:
+
+Note:  This was written for a course where the professor enforced use of Visual Studio for coding.  This may require some conversion to run without VS.
+
 In the project, there is a file names `IP.dat`.  This is a raw text file, currently containing the test cases:
 5 pairs of IP addresses and a corresponding network mask, separated by whitespace.  Either the 
 contents of this file should be replaced, or the path to your preffered text file can be substituted 
